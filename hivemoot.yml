@@ -43,3 +43,13 @@ rules:
   - wallet keys stay secret (env only)
   - no unauthorized external API calls
   - leader (888229115) approves final publishes
+
+  - name: FieldManager
+    model: logfare
+    tools: [playwright, chrome, github-api, render-api]
+    responsibilities:
+      - تسجيل الدخول للخدمات
+      - تجاوز CAPTCHA (عبر متصفح حقيقي)
+      - رفع workflow
+      - نشر على Witchly/Kubeletto/Suga
+      - إنشاء GitHub App عبر Manifest Flow

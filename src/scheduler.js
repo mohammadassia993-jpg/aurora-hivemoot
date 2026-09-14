@@ -224,3 +224,28 @@ export default { startScheduler, stopScheduler, getSchedulerStatus };
       await followup.runFollowupCycle();
     } catch (e) { errLog('scheduler', `Followup cycle failed: ${e.message}`); }
   }, { timezone: 'UTC' }));
+
+// ── Kiprio External Heartbeat (every 5 minutes) ──
+// Sends health check to kiprio.com to keep Render alive
+const KIPRIO_URL = 'https://kiprio.com/v1/uptime/check';
+const HEALTH_URL = 'https://aurora-bot-render.onrender.com/health';
+
+async function kiprioHeartbeat() {
+  try {
+    const resp = await fetch(`${KIPRIO_URL}?url=${encodeURIComponent(HEALTH_URL)}`);
+    const data = await resp.json();
+    if (data.ok) {
+      info('scheduler', `💓 Kiprio heartbeat OK (latency: ${data.latency_ms}ms)`);
+    } else {
+      warn('scheduler', `⚠️ Kiprio heartbeat failed: ${JSON.stringify(data)}`);
+    }
+  } catch (e) {
+    warn('scheduler', `⚠️ Kiprio heartbeat error: ${e.message}`);
+  }
+}
+
+// Register Kiprio heartbeat job
+if (process.env.AURORA_AUTOMATION !== 'false') {
+  jobs.push(cron.schedule('*/5 * * * *', kiprioHeartbeat, { timezone: 'UTC' }));
+  info('scheduler', '💓 Kiprio external heartbeat registered (every 5 min)');
+}
