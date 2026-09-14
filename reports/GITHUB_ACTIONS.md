@@ -4,18 +4,13 @@
 **الحالة:** ⛔ معيق — PAT يفتقد `workflow` scope
 
 ## السبب:
-GitHub Actions يتطلب:
-1. PAT بـ `workflow` scope (لإنشاء/تعديل workflow files)
-2. PAT الحالي يملك scope: `repo` فقط
-3. لا يمكن إنشاء workflow بدون `workflow` scope
+- PAT الحالي يملك scope: `repo` فقط
+- GitHub يرفض رفع أي ملف في `.github/workflows/` بدون `workflow` scope
+- لا يمكن إنشاء أو تعديل Workflows بدون هذا الصلاحية
 
-## ما يمكن فعله يدوياً:
-1. افتح https://github.com/settings/tokens
-2. أنشئ PAT جديد بـ scopes: `repo` + `workflow`
-3. احفظه في `.env.hivemoot`
-4. أنشئ ملف `.github/workflows/heartbeat.yml`:
-
+## ملف Workflow المطلوب (يجب إضافته يدوياً):
 ```yaml
+# .github/workflows/heartbeat.yml
 name: Heartbeat
 on:
   schedule:
@@ -24,11 +19,17 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -s https://aurora-bot-render.onrender.com/health
+      - name: Ping Render
+        run: |
+          curl -sf https://aurora-bot-render.onrender.com/health || echo "Health check failed"
+          curl -sf https://aurora-bot-render.onrender.com/heartbeat || echo "Heartbeat failed"
 ```
 
-5. ادفع الملف
+## خطوات التفعيل اليدوي:
+1. أنشئ PAT جديد بـ scopes: `repo` + `workflow`
+2. افتح المستودع على GitHub
+3. أنشئ الملف `.github/workflows/heartbeat.yml` بالمحتوى أعلاه
+4. ادفعه
 
-## alternatives:
-- Self-Ping في الكود (يعمل حالياً — كل 10 دقائق في `index.js`)
-- UptimeRobot (يتطلب تسجيل يدوي)
+## البديل الحالي:
+Self-Ping في `src/index.js` يعمل كل 10 دقائق ✅
